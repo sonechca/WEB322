@@ -1,5 +1,5 @@
 /*********************************************************************************
-* WEB322 – Assignment 02
+* WEB322 – Assignment 03
 * I declare that this assignment is my own work in accordance with Seneca Academic Policy. No part
 * of this assignment has been copied manually or electronically from any other source
 * (including 3rd party web sites) or distributed to other students. *
@@ -8,14 +8,24 @@
 * ********************************************************************************/
 
 // connect data-service.js
-var dataService = require("./data-service");
+const dataService = require("./data-service");
 //server.js 
-var express = require("express");
-var path = require("path");
-var app = express();
-var HTTP_PORT = process.env.PORT || 8080;
+const express = require("express");
+const multer = require("multer");
+const path = require("path");
+const app = express();
+const HTTP_PORT = process.env.PORT || 8080;
+const storage = multer.diskStorage({
+    destination: "./public/images/uploaded",
+    filename: function(req, file, cb){
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+})
+const upload = multer({storage: storage});
+const fs = require("fs");
 
 app.use(express.static('public'));
+
 
 
 // Home.html
@@ -61,7 +71,16 @@ app.get("/departments",function(req, res){
         return res.json({message: err});
     });
 });
+// images
+app.get("/images", (req,res)=>{
+    fs.readdir("./public/images/uploaded",(err, items)=>{
+        res.json({images: items});
+    })
+})
 
+app.post("/images/add",upload.single("imageFile"),(req,res)=>{
+    res.redirect("/images");
+})
 // No matching route
 app.use(function(req, res){
     res.status(404).sendFile(path.join(__dirname,"./views/error.html"));
